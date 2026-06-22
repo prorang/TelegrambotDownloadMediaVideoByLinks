@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  telegram-bot:
+    build: .
+    container_name: videoloader_bot
+    restart: always
+    environment:
+      # Передаем ваш токен в переменные окружения контейнера
+      - BOT_TOKEN=ВАШ_ТОКЕН_ОТ_BOTFATHER
+    volumes:
+      # Чтобы скачанные файлы не забивали внутреннюю память контейнера и сохранялись на диске
+      - ./downloads:/app/downloads
