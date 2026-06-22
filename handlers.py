@@ -38,32 +38,33 @@ async def group_and_private_link_handler(message: Message, bot: Bot) -> None:
     file_path = None
 
     try:
-        # 1. Пробуем скачать видеоролик
+        # 1. Сначала быстро запрашиваем метаданные, чтобы видео не косило на iPhone
+        meta = await dn.get_video_meta(text, platform)
+        width = meta.get('width')
+        height = meta.get('height')
+        duration = meta.get('duration')
+        print(f" Метаданные видео: {width}x{height}, длительность: {duration}с")
+
+        # 2. Скачиваем видеоролик вашим оригинальным методом
         file_path, downloaded_platform = await dn.download_video(text)
 
         if file_path and Path(file_path).exists():
             file_size_mb = Path(file_path).stat().st_size / (1024 * 1024)
-            print(f" Найдено видео: {file_path}, размер: {file_size_mb:.2f} MB")
+            print(f" Файл скачан: {file_path}, размер: {file_size_mb:.2f} MB")
             
             try:
-                if file_size_mb >= 49.5:
-                    print(" Отправка методом DOCUMENT (файл >= 50MB)...")
-                    await message.answer_document(
-                        document=FSInputFile(file_path),
-                        caption=caption_text + f"\n\n⚠️ Размер: {file_size_mb:.2f}MB. Отправлено документом."
-                    )
-                else:
-                    print(" Отправка методом VIDEO...")
-                    await message.answer_video(
-                        video=FSInputFile(file_path),
-                        caption=caption_text
-                    )
+                print(" Отправка методом VIDEO напрямую в плеер...")
+                await message.answer_video(
+                    video=FSInputFile(file_path),
+                    caption=caption_text,
+                    width=width,        # Передаем реальную ширину
+                    height=height,      # Передаем реальную высоту
+                    duration=duration   # Передаем длительность
+                )
                 success = True
             except Exception as send_err:
-                # ВАЖНО: Выводим в консоль, почему именно Telegram сбросил отправку видео
                 print(f"❌ Ошибка отправки в Telegram: {send_err}")
                 
-                # Резервная попытка (вдруг сбой был из-за разметки/типа плеера)
                 try:
                     print(" Резервная попытка отправки документом...")
                     await message.answer_document(document=FSInputFile(file_path), caption=caption_text)

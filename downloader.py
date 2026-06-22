@@ -29,6 +29,7 @@ class Downloader:
 
     def _get_ydl_opts(self, platform: str, destination: Path) -> dict:
         """Возвращает настройки в зависимости от платформы."""
+        
         base_opts = {
             'merge_output_format': 'mp4',
             'noplaylist': True,
@@ -39,12 +40,17 @@ class Downloader:
             'outtmpl': str(destination),
         }
 
-        # Если это Instagram или TikTok — качаем чистый оригинал без сжатия ffmpeg
-        if platform in ["instagram", "tiktok"]:
+        # Настройка форматов для Instagram и TikTok
+        if platform == "instagram":
+            # ХАК ДЛЯ IPHONE: принудительно забираем кодек avc1 (H.264) и mp4a (AAC)
+            base_opts['format'] = 'bestvideo[vcodec^=avc1]+bestaudio[acodec^=mp4a]/best[vcodec^=avc1]/best'
+            return base_opts
+        elif platform == "tiktok":
+            # Для TikTok оставляем чистый оригинал без изменений
             base_opts['format'] = 'bestvideo+bestaudio/best'
             return base_opts
 
-        # Для остальных платформ (YouTube, Facebook) применяем сжатие
+        # Для остальных платформ (YouTube, Facebook) применяем сжатие через ffmpeg
         base_opts['postprocessors'] = [{
             'key': 'FFmpegVideoConvertor',
             'preferedformat': 'mp4',
@@ -109,6 +115,25 @@ class Downloader:
         except Exception as e:
             logger.exception(f"Unexpected download error: {e}")
             raise
+    
+    async def get_video_meta(self, url: str, platform: str) -> dict:
+        """Быстро извлекает метаданные видео (ширину, высоту, длительность) без скачивания."""
+        def _sync_extract():
+            ydl_opts = self._get_ydl_opts(platform, Path("dummy_path.mp4"))
+            ydl_opts['extract_flat'] = False  # Нам нужна полная инфа, но без загрузки
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                return ydl.extract_info(url, download=False)
+                
+        try:
+            info = await asyncio.to_thread(_sync_extract)
+            return {
+                'width': info.get('width'),
+                'height': info.get('height'),
+                'duration': int(info.get('duration')) if info.get('duration') else None
+            }
+        except Exception as e:
+            logger.warning(f"Не удалось извлечь метаданные видео: {e}")
+            return {}
     
     def _sync_download_insta_photos(self, post_url: str, target_dir: Path) -> list[Path]:
         """Синхронное скачивание картинок из инстаграм-поста."""

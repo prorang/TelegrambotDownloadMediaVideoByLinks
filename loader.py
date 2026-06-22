@@ -10,7 +10,7 @@ from downloader import Downloader
 local_api_url = os.getenv("TELEGRAM_API_URL")
 
 if local_api_url:
-    custom_server = TelegramAPIServer.from_base_url(local_api_url)
+    custom_server = TelegramAPIServer.from_base(local_api_url)
     session = AiohttpSession(api=custom_server, timeout=900)
     print(f"🚀 Бот запущен с использованием локального Bot API: {local_api_url}")
 else:
