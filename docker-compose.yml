@@ -1,13 +1,28 @@
-version: '3.8'
-
 services:
+  telegram-bot-api:
+    image: aiogram/telegram-bot-api:latest
+    container_name: telegram_bot_api_server
+    restart: always
+    environment:
+      - TELEGRAM_API_ID=${TELEGRAM_API_ID}
+      - TELEGRAM_API_HASH=${TELEGRAM_API_HASH}
+    volumes:
+      - telegram-bot-api-data:/var/lib/telegram-bot-api
+    ports:
+      - "8081:8081" # Открываем порт сервера локально
+
   telegram-bot:
     build: .
     container_name: videoloader_bot
     restart: always
+    depends_on:
+      - telegram-bot-api
     environment:
-      # Передаем ваш токен в переменные окружения контейнера
-      - BOT_TOKEN=ВАШ_ТОКЕН_ОТ_BOTFATHER
+      - BOT_TOKEN=${BOT_TOKEN}
+      # Передаем боту локальный адрес сервера внутри докер-сети
+      - TELEGRAM_API_URL=http://telegram-bot-api:8081
     volumes:
-      # Чтобы скачанные файлы не забивали внутреннюю память контейнера и сохранялись на диске
       - ./downloads:/app/downloads
+
+volumes:
+  telegram-bot-api-data:

@@ -5,6 +5,7 @@ from urllib.parse import urlparse
 import asyncio
 import yt_dlp
 import config
+import instaloader
 
 logger = logging.getLogger(__name__)
 
@@ -17,11 +18,18 @@ class Downloader:
             "facebook": "facebook",
             "fb.watch": "facebook"
         }
+        self.il = instaloader.Instaloader(
+            download_videos=False, 
+            download_video_thumbnails=False,
+            download_geotags=False,
+            download_comments=False,
+            save_metadata=False,
+            post_metadata_txt_pattern=""
+        )
 
     def _get_ydl_opts(self, platform: str, destination: Path) -> dict:
         """Возвращает настройки в зависимости от платформы."""
         base_opts = {
-            'format': 'bestvideo[height<=1080][ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
             'merge_output_format': 'mp4',
             'noplaylist': True,
             'js_runtimes': {
@@ -101,3 +109,37 @@ class Downloader:
         except Exception as e:
             logger.exception(f"Unexpected download error: {e}")
             raise
+    
+    def _sync_download_insta_photos(self, post_url: str, target_dir: Path) -> list[Path]:
+        """Синхронное скачивание картинок из инстаграм-поста."""
+        try:
+            # Извлекаем shortcode из ссылки (например, из /p/DZjnKwHAeDq/ берем DZjnKwHAeDq)
+            shortcode = post_url.split("/p/")[1].split("/")[0]
+        except IndexError:
+            try:
+                shortcode = post_url.split("/reel/")[1].split("/")[0]
+            except IndexError:
+                return []
+
+        try:
+            post = instaloader.Post.from_shortcode(self.il.context, shortcode)
+            self.il.dirname_pattern = str(target_dir)
+            
+            # Скачиваем пост (картинки сохранятся в указанную папку)
+            self.il.download_post(post, target=shortcode)
+            
+            # Собираем пути ко всем скачанным файлам .jpg
+            photos = sorted(list(target_dir.glob("*.jpg")))
+            return photos
+        except Exception as e:
+            logger.error(f"Instaloader error: {e}")
+            return []
+
+    async def download_instagram_photos(self, url: str) -> list[str]:
+        """Скачивает картинки и возвращает список путей к ним."""
+        ts = datetime.now().strftime("%Y%m%d%H%M%S")
+        target_dir = config.DOWNLOADS_DIR / f"insta_pts_{ts}"
+        target_dir.mkdir(parents=True, exist_ok=True)
+        
+        photos = await asyncio.to_thread(self._sync_download_insta_photos, url, target_dir)
+        return [str(p) for p in photos]
