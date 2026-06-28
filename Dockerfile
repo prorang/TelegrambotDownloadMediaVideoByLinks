@@ -7,6 +7,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 RUN pip install aiogram yt-dlp google-genai
+RUN pip install openai
 
 # Устанавливаем рабочую директорию внутри контейнера
 WORKDIR /app
