@@ -12,6 +12,7 @@ if env_path.exists():
 
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
 ADMIN_ID = os.environ.get("ADMIN_ID")
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 
 if not BOT_TOKEN:
     raise ValueError("❌ Критическая ошибка: Переменная BOT_TOKEN не найдена ни в системе, ни в файле .env!")

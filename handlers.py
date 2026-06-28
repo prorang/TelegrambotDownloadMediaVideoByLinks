@@ -1,5 +1,5 @@
 from pathlib import Path
-from aiogram import F, Bot
+from aiogram import Router, F, Bot
 from aiogram.filters import Command
 from aiogram.types import Message, FSInputFile, ReactionTypeEmoji
 from aiogram.exceptions import TelegramBadRequest
@@ -10,11 +10,13 @@ from loader import dp, dn
 
 ADMIN_ID = int(config.ADMIN_ID)
 
-@dp.message(Command("start"))
+router = Router()
+
+@router.message(Command("start"))
 async def command_start_handler(message: Message) -> None:
     await message.answer("👋")
 
-@dp.message(Command("init_tg"))
+@router.message(Command("init_tg"))
 async def cmd_init_cookies(message: Message) -> None:
     # Проверяем, что команду вызвал именно хозяин бота
     if message.from_user.id != ADMIN_ID:
@@ -44,7 +46,7 @@ async def cmd_init_cookies(message: Message) -> None:
     except Exception as e:
         await message.answer(f"❌ Не удалось сохранить куки:\n<code>{e}</code>")
 
-@dp.message(F.text)
+@router.message(F.text, ~F.text.startswith("/"))
 async def group_and_private_link_handler(message: Message, bot: Bot) -> None:
     text = message.text.strip()
     

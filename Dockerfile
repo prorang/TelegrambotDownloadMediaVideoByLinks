@@ -6,6 +6,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg \
     && rm -rf /var/lib/apt/lists/*
 
+RUN pip install aiogram yt-dlp google-genai
+
 # Устанавливаем рабочую директорию внутри контейнера
 WORKDIR /app
 
