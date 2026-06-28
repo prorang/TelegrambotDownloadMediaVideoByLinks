@@ -6,6 +6,7 @@ from aiogram.types import BotCommand, BotCommandScopeAllPrivateChats
 
 from loader import bot, dp
 import handlers
+import inline_handlers
 
 async def set_bot_commands(bot_instance: Bot):
     """Регистрирует команды в меню Telegram."""
