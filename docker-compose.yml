@@ -19,10 +19,12 @@ services:
       - telegram-bot-api
     environment:
       - BOT_TOKEN=${BOT_TOKEN}
+      - ADMIN_ID=${ADMIN_ID}
       # Передаем боту локальный адрес сервера внутри докер-сети
       - TELEGRAM_API_URL=http://telegram-bot-api:8081
     volumes:
       - ./downloads:/app/downloads
+      - ./cookies.txt:/app/cookies.txt
 
 volumes:
   telegram-bot-api-data:

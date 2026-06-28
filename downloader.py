@@ -44,6 +44,7 @@ class Downloader:
         if platform == "instagram":
             # ХАК ДЛЯ IPHONE: принудительно забираем кодек avc1 (H.264) и mp4a (AAC)
             base_opts['format'] = 'bestvideo[vcodec^=avc1]+bestaudio[acodec^=mp4a]/best[vcodec^=avc1]/best'
+            base_opts['cookiefile'] = '/app/cookies.txt'
             return base_opts
         elif platform == "tiktok":
             # Для TikTok оставляем чистый оригинал без изменений

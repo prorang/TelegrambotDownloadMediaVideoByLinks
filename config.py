@@ -11,6 +11,7 @@ if env_path.exists():
     load_dotenv(dotenv_path=env_path)
 
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
+ADMIN_ID = os.environ.get("ADMIN_ID")
 
 if not BOT_TOKEN:
     raise ValueError("❌ Критическая ошибка: Переменная BOT_TOKEN не найдена ни в системе, ни в файле .env!")
