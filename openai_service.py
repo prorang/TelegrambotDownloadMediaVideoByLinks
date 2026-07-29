@@ -13,6 +13,7 @@ def ask_openrouter(messages: list, model: str = None) -> str:
     if model is None:
         model = 'openrouter/free'
         #model = 'google/gemma-4-31b-it:free'
+        #model = 'cognitivecomputations/dolphin-mistral-24b-venice-edition:free'
 
     try:
         response = client.chat.completions.create(

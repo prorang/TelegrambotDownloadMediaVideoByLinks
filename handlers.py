@@ -1,7 +1,7 @@
 from pathlib import Path
 from aiogram import Router, F, Bot
 from aiogram.filters import Command
-from aiogram.types import Message, FSInputFile, ReactionTypeEmoji
+from aiogram.types import Message, FSInputFile, ReactionTypeEmoji, InputMediaPhoto
 from aiogram.exceptions import TelegramBadRequest
 
 import config
@@ -76,37 +76,69 @@ async def group_and_private_link_handler(message: Message, bot: Bot) -> None:
         height = meta.get('height')
         duration = meta.get('duration')
 
+        if duration and duration > 600:
+            error_message = "⏱ <b>Видео слишком длинное!</b> Ограничение — до 10 минут."
+            print(f"⚠️ Пропущено видео по длительности: {duration} сек.")
+            # Выходим из try, чтобы не выполнять download_video
+            # status_msg и ошибки обработаются в блоке ниже
+            raise ValueError(error_message)
+        
         # 2. Скачиваем видеоролик
-        file_path, downloaded_platform = await dn.download_video(text)
+        try:
+            file_path, downloaded_platform = await dn.download_video(text)
+        except Exception as download_err:
+            file_path = None
 
         if file_path and Path(file_path).exists():
-            file_size_mb = Path(file_path).stat().st_size / (1024 * 1024)
-            print(f" Найдено видео: {file_path}, размер: {file_size_mb:.2f} MB")
+            width = meta.get('width')
+            height = meta.get('height')
             
-            try:
-                await message.answer_video(
-                    video=FSInputFile(file_path),
-                    caption=caption_text,
-                    width=width,
-                    height=height,
-                    duration=duration
-                )
+            await message.answer_video(
+                video=FSInputFile(file_path),
+                caption=caption_text,
+                width=width,
+                height=height,
+                duration=duration
+            )
+            success = True
+
+        # 4. ЕСЛИ НЕ ВИДЕО (например, картинка/карусель) и это Инстаграм — скачиваем фото
+        elif platform == "instagram":
+            photos = await dn.download_instagram_photos(text)
+            
+            if photos:
+                if len(photos) == 1:
+                    await message.answer_photo(
+                        photo=FSInputFile(photos[0]),
+                        caption=caption_text
+                    )
+                else:
+                    # Если это карусель из нескольких фото
+                    media_group = [
+                        InputMediaPhoto(media=FSInputFile(p), caption=caption_text if i == 0 else "")
+                        for i, p in enumerate(photos[:10]) # Ограничение Telegram — до 10 медиа
+                    ]
+                    await message.answer_media_group(media=media_group)
+                
                 success = True
                 
-                # Если всё успешно скачалось и это группа — удаляем исходное сообщение с ссылкой
-                if is_group:
-                    try:
-                        await message.delete()
-                    except TelegramBadRequest:
-                        pass
-                        
-            except Exception as send_err:
-                error_message = f"Ошибка отправки видео в Telegram: {send_err}"
-                print(f"❌ {error_message}")
+                # Удаляем скачанные папки с фото
+                photo_dir = Path(photos[0]).parent
+                for p in photos:
+                    Path(p).unlink(missing_ok=True)
+                photo_dir.rmdir()
 
+        if success and is_group:
+            try:
+                await message.delete()
+            except TelegramBadRequest:
+                pass
+
+    except ValueError as ve:
+        error_message = str(ve)
     except Exception as e:
-        error_message = f"Ошибка скачивания через yt-dlp:\n<code>{str(e)[:300]}</code>"
-        print(f"❌ Ошибка при работе с видео: {e}")
+        error_message = f"Ошибка обработки ссылки:\n<code>{str(e)[:300]}</code>"
+        print(f"❌ Ошибка: {e}")
 
     # Удаляем временный файл с диска
     if file_path and Path(file_path).exists():

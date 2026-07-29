@@ -127,13 +127,15 @@ class Downloader:
                 
         try:
             info = await asyncio.to_thread(_sync_extract)
+            if not info:
+                return {}
             return {
                 'width': info.get('width'),
                 'height': info.get('height'),
                 'duration': int(info.get('duration')) if info.get('duration') else None
             }
         except Exception as e:
-            logger.warning(f"Не удалось извлечь метаданные видео: {e}")
+            logger.warning(f"Не удалось извлечь метаданные (возможно, это карусель с фото): {e}")
             return {}
     
     def _sync_download_insta_photos(self, post_url: str, target_dir: Path) -> list[Path]:
