@@ -1,5 +1,8 @@
 import asyncio
 import logging
+
+import dns_config  # noqa: F401
+
 from aiogram import Bot
 from aiogram.types import BotCommand, BotCommandScopeAllPrivateChats
 from ai_handlers import ai_router

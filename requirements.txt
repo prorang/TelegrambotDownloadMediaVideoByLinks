@@ -3,3 +3,4 @@ yt-dlp
 pydantic
 python-dotenv
 instaloader
+dnspython
