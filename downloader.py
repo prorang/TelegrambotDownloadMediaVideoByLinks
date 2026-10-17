@@ -1,16 +1,20 @@
+import asyncio
 import logging
 from datetime import datetime
 from pathlib import Path
 from urllib.parse import urlparse
-import asyncio
-import yt_dlp
-import config
+
 import instaloader
+import yt_dlp
+
+import config
+from cleanup import DownloadsCleaner
 
 logger = logging.getLogger(__name__)
 
 class Downloader:
-    def __init__(self) -> None:
+    def __init__(self, cleaner: DownloadsCleaner) -> None:
+        self._cleaner = cleaner
         self._platforms_map = {
             "youtu": "youtube",
             "tiktok": "tiktok",
@@ -106,17 +110,63 @@ class Downloader:
             if path.exists() and path.stat().st_size > 1024:
                 logger.info(f"Successfully downloaded: {path_str}")
                 return path_str, platform
-            
+
             logger.error(f"File is empty or does not exist: {path_str}")
+            self._cleaner.remove(file_path)
             return None, None
 
         except yt_dlp.utils.DownloadError as e:
             logger.error(f"yt_dlp error: {e}")
+            self._cleaner.remove(file_path)
             raise
         except Exception as e:
             logger.exception(f"Unexpected download error: {e}")
+            self._cleaner.remove(file_path)
             raise
     
+    @staticmethod
+    def _estimate_filesize(info: dict) -> int | None:
+        """Оценивает итоговый размер файла (видео + аудио) в байтах до скачивания."""
+        def fmt_size(f: dict) -> int:
+            return f.get('filesize') or f.get('filesize_approx') or 0
+
+        # 1. Самый точный вариант: потоки, которые yt-dlp уже выбрал под текущий format
+        #    (для YouTube это адаптивные bestvideo + bestaudio).
+        requested = info.get('requested_formats') or info.get('requested_downloads')
+        if requested:
+            total = sum(fmt_size(f) for f in requested)
+            if total:
+                return int(total)
+
+        total = info.get('filesize') or info.get('filesize_approx')
+        if total:
+            return int(total)
+
+        formats = info.get('formats') or []
+
+        # 2. Склеенный формат: видео и аудио в одном файле.
+        #    Важно: на YouTube такой формат обычно 360p и очень лёгкий, поэтому
+        #    НЕЛЬЗЯ на нём останавливаться — иначе реальные тяжёлые потоки игнорируются.
+        combined = [fmt_size(f) for f in formats
+                    if f.get('vcodec') not in (None, 'none')
+                    and f.get('acodec') not in (None, 'none')]
+
+        # 3. Раздельные потоки — именно их yt-dlp и складывает в итоговый файл.
+        video_sizes = [fmt_size(f) for f in formats
+                       if f.get('vcodec') not in (None, 'none')
+                       and f.get('acodec') in (None, 'none')]
+        audio_sizes = [fmt_size(f) for f in formats
+                       if f.get('acodec') not in (None, 'none')
+                       and f.get('vcodec') in (None, 'none')]
+        separate = max(video_sizes) + max(audio_sizes) if video_sizes and audio_sizes else 0
+
+        # Берём максимум из вариантов: лучше лишний раз спросить, чем молча качать большой файл.
+        candidates = [size for size in (
+            max(combined) if combined else 0,
+            separate,
+        ) if size]
+        return int(max(candidates)) if candidates else None
+
     async def get_video_meta(self, url: str, platform: str) -> dict:
         """Быстро извлекает метаданные видео (ширину, высоту, длительность) без скачивания."""
         def _sync_extract():
@@ -132,7 +182,8 @@ class Downloader:
             return {
                 'width': info.get('width'),
                 'height': info.get('height'),
-                'duration': int(info.get('duration')) if info.get('duration') else None
+                'duration': int(info.get('duration')) if info.get('duration') else None,
+                'filesize': self._estimate_filesize(info)
             }
         except Exception as e:
             logger.warning(f"Не удалось извлечь метаданные (возможно, это карусель с фото): {e}")
@@ -168,6 +219,12 @@ class Downloader:
         ts = datetime.now().strftime("%Y%m%d%H%M%S")
         target_dir = config.DOWNLOADS_DIR / f"insta_pts_{ts}"
         target_dir.mkdir(parents=True, exist_ok=True)
-        
+
         photos = await asyncio.to_thread(self._sync_download_insta_photos, url, target_dir)
+
+        # Ничего не скачалось (или упало на середине) — подчищаем папку, чтобы не оставлять мусор
+        if not photos:
+            self._cleaner.remove(target_dir)
+            return []
+
         return [str(p) for p in photos]

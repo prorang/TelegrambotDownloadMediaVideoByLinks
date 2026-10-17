@@ -1,0 +1,32 @@
+[project]
+name = "telegram-video-bot"
+version = "0.1.0"
+description = "Telegram-бот для скачивания видео/фото + AI-ассистент"
+requires-python = ">=3.11"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+extend-exclude = ["downloads"]
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle: ошибки (отступы, пробелы, длина строк)
+    "W",   # pycodestyle: предупреждения
+    "F",   # pyflakes: неиспользуемые импорты, переменные, опечатки в именах
+    "I",   # isort: сортировка импортов
+    "UP",  # pyupgrade: современный синтаксис Python
+    "B",   # bugbear: типовые логические ошибки (напр. изменяемые аргументы по умолчанию)
+    "SIM", # simplify: упрощения
+    "C4",  # comprehensions: генераторы списков
+]
+ignore = [
+    "E501", # длина строки — управдается форматтером
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["config", "loader", "handlers", "ai_handlers", "downloader", "openai_service"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"

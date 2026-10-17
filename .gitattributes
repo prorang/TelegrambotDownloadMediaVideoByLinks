@@ -1,0 +1,2 @@
+# Единый стиль переносов строк — LF (см. .editorconfig, end_of_line = lf)
+* text=auto eol=lf

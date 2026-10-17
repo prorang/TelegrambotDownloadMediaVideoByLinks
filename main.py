@@ -5,7 +5,11 @@ from aiogram.types import BotCommand, BotCommandScopeAllPrivateChats
 from ai_handlers import ai_router
 
 from loader import bot, dp
-from handlers import router as download_router
+from handlers import (
+    cleanup_downloads_loop,
+    purge_downloads,
+    router as download_router,
+)
 
 async def set_bot_commands(bot_instance: Bot):
     """Регистрирует команды в меню Telegram."""
@@ -28,6 +32,10 @@ async def main() -> None:
     # Подключаем роутеры
     dp.include_router(ai_router)
     dp.include_router(download_router)
+
+    # Чистим временные файлы от прошлого запуска и запускаем фоновую уборку
+    purge_downloads()
+    asyncio.create_task(cleanup_downloads_loop())
 
     await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot)

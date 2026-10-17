@@ -1,0 +1,205 @@
+<mxfile host="app.diagrams.net" type="device">
+  <diagram name="Структура проекта" id="proj-structure">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1920" pageHeight="1120" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="gdata" value="🔐 Данные и секреты" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;dashPattern=6 4;fillColor=none;strokeColor=#999999;fontColor=#666666;fontSize=14;fontStyle=1;verticalAlign=top;" vertex="1" parent="1">
+          <mxGeometry x="40" y="30" width="280" height="510" as="geometry" />
+        </mxCell>
+        <mxCell id="ginfra" value="🐳 Инфраструктура (Docker)" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;dashPattern=6 4;fillColor=none;strokeColor=#999999;fontColor=#666666;fontSize=14;fontStyle=1;verticalAlign=top;" vertex="1" parent="1">
+          <mxGeometry x="40" y="590" width="280" height="420" as="geometry" />
+        </mxCell>
+        <mxCell id="gapp" value="🐍 Python-модули" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;dashPattern=6 4;fillColor=none;strokeColor=#999999;fontColor=#666666;fontSize=14;fontStyle=1;verticalAlign=top;" vertex="1" parent="1">
+          <mxGeometry x="400" y="20" width="1460" height="830" as="geometry" />
+        </mxCell>
+        <mxCell id="gext" value="🌐 Внешние сервисы и библиотеки" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;dashPattern=6 4;fillColor=none;strokeColor=#999999;fontColor=#666666;fontSize=14;fontStyle=1;verticalAlign=top;" vertex="1" parent="1">
+          <mxGeometry x="400" y="870" width="1240" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="env" value="🔐 .env" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;arcSize=18;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="60" y="60" width="240" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="cookies" value="🍪 cookies.txt&#10;sessionid Instagram" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;arcSize=18;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="60" y="300" width="240" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="downloads" value="📁 downloads/&#10;instagram/, tiktok/" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;arcSize=18;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="60" y="440" width="240" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="dockerfile" value="Dockerfile&#10;python:3.11-slim + ffmpeg" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="60" y="620" width="240" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="reqs" value="requirements.txt&#10;aiogram, yt-dlp, instaloader..." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="60" y="740" width="240" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="compose" value="docker-compose.yml&#10;• telegram-bot-api (порт 8081)&#10;• telegram-bot (build: .)&#10;• volumes: ./downloads, ./cookies.txt" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="60" y="850" width="240" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="title" value="🤖 Telegram Video Bot — структура проекта" style="text;html=1;align=left;verticalAlign=middle;fontSize=20;fontStyle=1;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="1200" y="60" width="320" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="legend" value="🎨 Легенда:&#10;• 🟩 зелёный — точка входа&#10;• 🟦 синий — Python-модули&#10;• 🟨 жёлтый — файлы данных/секреты&#10;• 🟪 фиолетовый — Docker&#10;• ⬜ серый пунктир — внешние сервисы&#10;• 🟥 красный пунктир — сломанный модуль" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;dashPattern=6 4;fillColor=#ffffff;strokeColor=#999999;align=left;spacingLeft=10;verticalAlign=top;spacingTop=8;fontSize=12;fontColor=#555555;" vertex="1" parent="1">
+          <mxGeometry x="1200" y="200" width="320" height="170" as="geometry" />
+        </mxCell>
+        <mxCell id="config" value="&lt;b&gt;config.py&lt;/b&gt;&lt;br&gt;BOT_TOKEN, ADMIN_ID,&lt;br&gt;GEMINI_API_KEY, OPEN_AI_API_KEY,&lt;br&gt;CONFIRM_SIZE_MB, DOWNLOADS_DIR" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="420" y="60" width="280" height="160" as="geometry" />
+        </mxCell>
+        <mxCell id="main" value="&lt;b&gt;main.py&lt;/b&gt; 🚀&lt;br&gt;Точка входа:&lt;br&gt;set_bot_commands(),&lt;br&gt;include_router(), polling" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;arcSize=8;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="860" y="60" width="280" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="loader" value="&lt;b&gt;loader.py&lt;/b&gt;&lt;br&gt;bot = Bot(), dp = Dispatcher(),&lt;br&gt;cleaner = DownloadsCleaner(),&lt;br&gt;dn = Downloader(cleaner)&lt;br&gt;локальный Bot API (если TELEGRAM_API_URL)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="860" y="210" width="280" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="handlers" value="&lt;b&gt;handlers.py&lt;/b&gt; — router загрузок&lt;br&gt;• /start, /init_tg (admin)&#10;• Ловит ссылки → метаданные → подтверждение размера&#10;• _run_download(): видео / фото / карусель&#10;• подтверждение перед отправкой, если реальный файл больше лимита&#10;• PENDING_DOWNLOADS / PENDING_UPLOADS (in-memory)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;arcSize=8;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="420" y="380" width="280" height="220" as="geometry" />
+        </mxCell>
+        <mxCell id="downloader" value="&lt;b&gt;downloader.py&lt;/b&gt; — class Downloader&lt;br&gt;• download_video() — yt-dlp&#10;• get_video_meta() — метаданные без скачивания&#10;• _estimate_filesize() — оценка размера (requested_formats / video+audio)&#10;• download_instagram_photos() — instaloader&#10;• удаление через cleaner (DownloadsCleaner)&#10;• кодеки/ffmpeg по платформам" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;arcSize=8;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="420" y="630" width="280" height="220" as="geometry" />
+        </mxCell>
+        <mxCell id="cleanup" value="&lt;b&gt;cleanup.py&lt;/b&gt; — class DownloadsCleaner&lt;br&gt;• remove(path) — файл (с «хвостами»)/папка&#10;• sweep(protected, force) — проход по downloads/&#10;• неблокирующий замок от параллельных уборок" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;arcSize=8;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="1240" y="640" width="280" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="aih" value="&lt;b&gt;ai_handlers.py&lt;/b&gt; — ai_router&lt;br&gt;• /ai &amp;lt;вопрос&amp;gt;&#10;• user_history в памяти (TTL 1 час)&#10;• подгружает историю из Telegram" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;arcSize=8;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="860" y="390" width="280" height="160" as="geometry" />
+        </mxCell>
+        <mxCell id="openai" value="&lt;b&gt;openai_service.py&lt;/br&gt;&lt;br&gt;ask_openrouter(messages)&#10;модель: openrouter/free" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="1240" y="480" width="280" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="gemini" value="&lt;b&gt;gemini_service.py&lt;/b&gt; ⚠️&lt;br&gt;from config import settings —&#10;в config.py нет settings → AttributeError&#10;Нигде не импортируется" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;dashed=1;arcSize=8;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1560" y="480" width="280" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="ytdlp" value="yt-dlp + ffmpeg&#10;(+ node/deno для JS-рантаймов)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;dashed=1;dashPattern=8 4;" vertex="1" parent="1">
+          <mxGeometry x="420" y="900" width="280" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="insta" value="instaloader&#10;фото-карусели Instagram" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;dashed=1;dashPattern=8 4;" vertex="1" parent="1">
+          <mxGeometry x="740" y="900" width="220" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="tg" value="Telegram Bot API&#10;локальный сервер (docker) / официальный" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;dashed=1;dashPattern=8 4;" vertex="1" parent="1">
+          <mxGeometry x="1000" y="900" width="280" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="or" value="OpenRouter API&#10;openrouter.ai" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;dashed=1;dashPattern=8 4;" vertex="1" parent="1">
+          <mxGeometry x="1320" y="900" width="280" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" value="bot, dp" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;fontColor=#333333;strokeColor=#666666;endArrow=block;endFill=1;" edge="1" parent="1" source="main" target="loader">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" value="include_router" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;fontColor=#333333;strokeColor=#666666;endArrow=block;endFill=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="main" target="handlers">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="760" y="105" /><mxPoint x="760" y="380" /></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e3" value="include_router" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;fontColor=#333333;strokeColor=#666666;endArrow=block;endFill=1;exitX=0.85;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="main" target="aih">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="1180" y="150" /><mxPoint x="1180" y="390" /></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e4" value="BOT_TOKEN" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;fontColor=#333333;strokeColor=#666666;endArrow=block;endFill=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="loader" target="config">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="780" y="270" /><mxPoint x="780" y="140" /></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e5" value="dn = Downloader()" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;fontColor=#333333;strokeColor=#666666;endArrow=block;endFill=1;exitX=0.15;exitY=1;exitDx=0;exitDy=0;entryX=1;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="loader" target="downloader">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="902" y="355" /><mxPoint x="780" y="355" /><mxPoint x="780" y="630" /></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e6" value="import dn, dp" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;fontColor=#333333;strokeColor=#666666;endArrow=block;endFill=1;exitX=0.93;exitY=0;exitDx=0;exitDy=0;entryX=0.3;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="handlers" target="loader">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="676" y="355" /><mxPoint x="944" y="355" /></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e7" value="ADMIN_ID, CONFIRM_SIZE_MB" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;fontColor=#333333;strokeColor=#666666;endArrow=block;endFill=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="handlers" target="config">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e8" value="/init_tg пишет sessionid" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;fontColor=#333333;strokeColor=#666666;endArrow=block;endFill=1;exitX=0;exitY=0.2;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="handlers" target="cookies">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="355" y="418" /><mxPoint x="355" y="340" /></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e9" value="download_video(), get_video_meta()" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;fontColor=#333333;strokeColor=#666666;endArrow=block;endFill=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="handlers" target="downloader">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e10" value="DOWNLOADS_DIR" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;fontColor=#333333;strokeColor=#666666;endArrow=block;endFill=1;exitX=0;exitY=0.15;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="downloader" target="config">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="340" y="657" /><mxPoint x="340" y="140" /></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e11" value="cookiefile (Instagram)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;fontColor=#333333;strokeColor=#666666;endArrow=block;endFill=1;dashed=1;exitX=0;exitY=0.4;exitDx=0;exitDy=0;entryX=0.6;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="downloader" target="cookies">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="325" y="702" /><mxPoint x="325" y="380" /></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e12" value="пишет видео/фото" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;fontColor=#333333;strokeColor=#666666;endArrow=block;endFill=1;exitX=0;exitY=0.65;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="downloader" target="downloads">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="375" y="747" /><mxPoint x="375" y="480" /></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e13" value="скачивание" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;fontColor=#333333;strokeColor=#666666;endArrow=block;endFill=1;exitX=0.3;exitY=1;exitDx=0;exitDy=0;entryX=0.3;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="downloader" target="ytdlp">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e14" value="фото-карусели" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;fontColor=#333333;strokeColor=#666666;endArrow=block;endFill=1;exitX=0.85;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="downloader" target="insta">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="658" y="860" /><mxPoint x="850" y="860" /></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e15" value="ask_openrouter()" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;fontColor=#333333;strokeColor=#666666;endArrow=block;endFill=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.25;entryDx=0;entryDy=0;" edge="1" parent="1" source="aih" target="openai">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="1190" y="470" /><mxPoint x="1190" y="510" /></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e16" value="OPEN_AI_API_KEY" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;fontColor=#333333;strokeColor=#666666;endArrow=block;endFill=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=1;entryY=0.55;entryDx=0;entryDy=0;" edge="1" parent="1" source="openai" target="config">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="1380" y="170" /></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e17" value="HTTP" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;fontColor=#333333;strokeColor=#666666;endArrow=block;endFill=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="openai" target="or">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="1380" y="740" /><mxPoint x="1460" y="740" /></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e18" value="Bot API (локальный/официальный)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;fontColor=#333333;strokeColor=#666666;endArrow=block;endFill=1;exitX=1;exitY=0.75;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="loader" target="tg">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="1175" y="300" /><mxPoint x="1175" y="900" /></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e19" value="load_dotenv()" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;fontColor=#333333;strokeColor=#666666;endArrow=block;endFill=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.25;entryDx=0;entryDy=0;" edge="1" parent="1" source="env" target="config">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e20" value="pip install -r" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;fontColor=#333333;strokeColor=#666666;endArrow=block;endFill=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="dockerfile" target="reqs">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e21" value="build: ." style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;fontColor=#333333;strokeColor=#666666;endArrow=block;endFill=1;exitX=1;exitY=0.4;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="compose" target="dockerfile">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="355" y="898" /><mxPoint x="355" y="660" /></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e22" value="сервис telegram-bot-api" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;fontColor=#333333;strokeColor=#666666;endArrow=block;endFill=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="compose" target="tg">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="180" y="1050" /><mxPoint x="1140" y="1050" /></Array>
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="e23" value="cleaner = DownloadsCleaner()" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;fontColor=#333333;strokeColor=#666666;endArrow=block;endFill=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.4;entryDx=0;entryDy=0;" edge="1" parent="1" source="loader" target="cleanup">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="1180" y="275" /><mxPoint x="1180" y="700" /></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e24" value="cleaner.remove() / sweep()" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;fontColor=#333333;strokeColor=#666666;endArrow=block;endFill=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.2;entryDx=0;entryDy=0;" edge="1" parent="1" source="handlers" target="cleanup">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="760" y="490" /><mxPoint x="760" y="670" /></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e25" value="cleaner.remove()" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;fontColor=#333333;strokeColor=#666666;endArrow=block;endFill=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.85;entryDx=0;entryDy=0;" edge="1" parent="1" source="downloader" target="cleanup">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="770" y="740" /><mxPoint x="770" y="767" /></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e26" value="удаляет файлы" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;fontColor=#333333;strokeColor=#666666;endArrow=block;endFill=1;dashed=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="cleanup" target="downloads">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="1380" y="1080" /><mxPoint x="340" y="1080" /><mxPoint x="340" y="480" /></Array>
+          </mxGeometry>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

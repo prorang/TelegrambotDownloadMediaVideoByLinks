@@ -5,6 +5,7 @@ from aiogram.client.session.aiohttp import AiohttpSession
 from aiogram.client.telegram import TelegramAPIServer # Импортируем класс сервера
 from aiogram.fsm.storage.memory import MemoryStorage
 import config
+from cleanup import DownloadsCleaner
 from downloader import Downloader
 
 local_api_url = os.getenv("TELEGRAM_API_URL")
@@ -24,4 +25,5 @@ bot = Bot(
 )
 
 dp = Dispatcher(storage=MemoryStorage())
-dn = Downloader()
+cleaner = DownloadsCleaner(config.DOWNLOADS_DIR, config.UPLOAD_TTL)
+dn = Downloader(cleaner)

@@ -17,3 +17,12 @@ OPEN_AI_API_KEY = os.environ.get("OPEN_AI_API_KEY")
 
 if not BOT_TOKEN:
     raise ValueError("❌ Критическая ошибка: Переменная BOT_TOKEN не найдена ни в системе, ни в файле .env!")
+
+# Лимит размера видео (в МБ), после которого бот спрашивает подтверждение на загрузку
+CONFIRM_SIZE_MB = int(os.environ.get("CONFIRM_SIZE_MB", "100"))
+
+# Сколько секунд ждать решения по скачанному файлу, прежде чем удалить его
+UPLOAD_TTL = 30 * 60
+
+# Период фоновой уборки downloads/ (в секундах)
+CLEANUP_INTERVAL = 300
