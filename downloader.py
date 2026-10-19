@@ -1,6 +1,7 @@
 import asyncio
 import logging
 from datetime import datetime
+from itertools import islice
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -183,48 +184,135 @@ class Downloader:
                 'width': info.get('width'),
                 'height': info.get('height'),
                 'duration': int(info.get('duration')) if info.get('duration') else None,
-                'filesize': self._estimate_filesize(info)
+                'filesize': self._estimate_filesize(info),
+                'like_count': info.get('like_count'),
             }
         except Exception as e:
             logger.warning(f"Не удалось извлечь метаданные (возможно, это карусель с фото): {e}")
             return {}
     
-    def _sync_download_insta_photos(self, post_url: str, target_dir: Path) -> list[Path]:
-        """Синхронное скачивание картинок из инстаграм-поста."""
-        try:
-            # Извлекаем shortcode из ссылки (например, из /p/DZjnKwHAeDq/ берем DZjnKwHAeDq)
-            shortcode = post_url.split("/p/")[1].split("/")[0]
-        except IndexError:
-            try:
-                shortcode = post_url.split("/reel/")[1].split("/")[0]
-            except IndexError:
-                return []
+    @staticmethod
+    def _extract_instagram_shortcode(url: str) -> str | None:
+        """Достаёт shortcode из ссылки вида /p/<code>/, /reel/<code>/ или /tv/<code>/."""
+        for marker in ("/p/", "/reel/", "/tv/"):
+            if marker in url:
+                return url.split(marker)[1].split("/")[0]
+        return None
+
+    def _sync_download_insta_photos(self, post_url: str, target_dir: Path) -> tuple[list[Path], int | None]:
+        """Синхронное скачивание картинок из инстаграм-поста.
+
+        Возвращает пути к файлам и количество лайков поста (если удалось узнать).
+        """
+        shortcode = self._extract_instagram_shortcode(post_url)
+        if not shortcode:
+            return [], None
 
         try:
             post = instaloader.Post.from_shortcode(self.il.context, shortcode)
             self.il.dirname_pattern = str(target_dir)
-            
+
             # Скачиваем пост (картинки сохранятся в указанную папку)
             self.il.download_post(post, target=shortcode)
-            
+
             # Собираем пути ко всем скачанным файлам .jpg
-            photos = sorted(list(target_dir.glob("*.jpg")))
-            return photos
+            photos = sorted(target_dir.glob("*.jpg"))
+            try:
+                likes = post.likes
+            except Exception:
+                likes = None
+            return photos, likes
         except Exception as e:
             logger.error(f"Instaloader error: {e}")
-            return []
+            return [], None
 
-    async def download_instagram_photos(self, url: str) -> list[str]:
-        """Скачивает картинки и возвращает список путей к ним."""
+    async def download_instagram_photos(self, url: str) -> tuple[list[str], int | None]:
+        """Скачивает картинки и возвращает (список путей, количество лайков)."""
         ts = datetime.now().strftime("%Y%m%d%H%M%S")
         target_dir = config.DOWNLOADS_DIR / f"insta_pts_{ts}"
         target_dir.mkdir(parents=True, exist_ok=True)
 
-        photos = await asyncio.to_thread(self._sync_download_insta_photos, url, target_dir)
+        photos, likes = await asyncio.to_thread(self._sync_download_insta_photos, url, target_dir)
 
         # Ничего не скачалось (или упало на середине) — подчищаем папку, чтобы не оставлять мусор
         if not photos:
             self._cleaner.remove(target_dir)
+            return [], likes
+
+        return [str(p) for p in photos], likes
+
+    def _sync_ydl_comments(self, url: str, platform: str, limit: int) -> list[dict]:
+        """Достаёт комментарии через yt-dlp (YouTube, а также платформы, где это поддерживается)."""
+        ydl_opts = self._get_ydl_opts(platform, Path("dummy_comments.mp4"))
+        ydl_opts.update({
+            'skip_download': True,
+            'getcomments': True,
+            'quiet': True,
+            'no_warnings': True,
+            'noplaylist': True,
+        })
+
+        if platform == "youtube":
+            # top — сортировка на стороне YouTube; 0 ответов, только корневые комментарии.
+            ydl_opts['extractor_args'] = {
+                'youtube': {
+                    'comment_sort': ['top'],
+                    'max_comments': [str(limit), str(limit), '0', '0', '0'],
+                },
+            }
+
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(url, download=False)
+
+        comments = list((info or {}).get('comments') or [])
+        comments = [c for c in comments if c.get('parent') in (None, 'root')]
+        comments.sort(key=lambda c: c.get('like_count') or 0, reverse=True)
+
+        result = []
+        for comment in comments[:limit]:
+            text = (comment.get('text') or '').strip()
+            if not text:
+                continue
+            result.append({
+                'author': comment.get('author') or 'аноним',
+                'text': text,
+                'like_count': comment.get('like_count') or 0,
+            })
+        return result
+
+    def _sync_instagram_comments(self, url: str, limit: int) -> list[dict]:
+        """Достаёт комментарии поста Instagram через instaloader."""
+        shortcode = self._extract_instagram_shortcode(url)
+        if not shortcode:
             return []
 
-        return [str(p) for p in photos]
+        post = instaloader.Post.from_shortcode(self.il.context, shortcode)
+
+        # Не тянем весь пост: для топа достаточно первых ~50-75 комментариев.
+        comments = []
+        for comment in islice(post.get_comments(), max(limit * 5, 50)):
+            text = (comment.text or '').strip()
+            if not text:
+                continue
+            try:
+                author = comment.owner.username
+            except Exception:
+                author = 'аноним'
+            comments.append({
+                'author': author or 'аноним',
+                'text': text,
+                'like_count': comment.likes_count or 0,
+            })
+
+        comments.sort(key=lambda c: c['like_count'], reverse=True)
+        return comments[:limit]
+
+    async def get_top_comments(self, url: str, platform: str, limit: int = 15) -> list[dict]:
+        """Возвращает топ комментариев по лайкам. Пустой список — комментарии недоступны."""
+        try:
+            if platform == "instagram":
+                return await asyncio.to_thread(self._sync_instagram_comments, url, limit)
+            return await asyncio.to_thread(self._sync_ydl_comments, url, platform, limit)
+        except Exception as e:
+            logger.warning(f"Не удалось получить комментарии для {url}: {e}")
+            return []

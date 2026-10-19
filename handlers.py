@@ -1,4 +1,5 @@
 import asyncio
+import html
 import time
 import uuid
 from pathlib import Path
@@ -33,6 +34,99 @@ PENDING_DOWNLOADS: dict[str, dict] = {}
 # key -> {"path", "url", "meta", "chat_id", "message_id", "is_group", "created_at"}
 PENDING_UPLOADS: dict[str, dict] = {}
 
+# Кнопки у отправленных медиа: key -> {"url", "platform", "comments", "created_at"}
+MEDIA_STATE: dict[str, dict] = {}
+MEDIA_STATE_TTL = 24 * 60 * 60
+COMMENTS_LIMIT = 15
+
+# Человекочитаемые названия платформ для подписи «сколько лайков в источнике»
+PLATFORM_NAMES = {
+    "youtube": "YouTube",
+    "instagram": "Instagram",
+    "tiktok": "TikTok",
+    "facebook": "Facebook",
+}
+
+
+def _format_likes(count: int | None) -> str:
+    """Текст кнопки с количеством лайков из источника."""
+    if count is None:
+        return "❤️ —"
+    return f"❤️ {count:,}".replace(",", " ")
+
+
+def _media_kb(
+    url: str,
+    key: str,
+    platform: str | None,
+    like_count: int | None,
+) -> InlineKeyboardMarkup:
+    """Клавиатура под медиа: ссылка на оригинал, лайки источника и комментарии.
+
+    Telegram не переносит inline-клавиатуру при пересылке сообщения, поэтому
+    в пересланном видео ссылки не остаётся (в отличие от ссылки в подписи).
+    """
+    platform_tag = platform or "unknown"
+    likes_tag = str(like_count) if like_count is not None else "none"
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="🔗 Ссылка на оригинал", url=url)],
+        [
+            InlineKeyboardButton(
+                text=_format_likes(like_count),
+                callback_data=f"likes:{platform_tag}:{likes_tag}",
+            ),
+            InlineKeyboardButton(text="💬 Комментарии", callback_data=f"cmt:{key}"),
+        ],
+    ])
+
+
+def _register_media_state(url: str, platform: str | None) -> str:
+    """Создаёт состояние кнопок и возвращает короткий ключ для callback_data."""
+    key = uuid.uuid4().hex
+    MEDIA_STATE[key] = {
+        "url": url,
+        "platform": platform,
+        "comments": None,
+        "created_at": time.time(),
+    }
+    return key
+
+
+def _format_comment_chunks(comments: list[dict]) -> list[str]:
+    """Форматирует комментарии в HTML-сообщения, не превышающие лимит Telegram."""
+    chunks: list[str] = []
+    current = "💬 <b>Топ комментариев</b>"
+
+    for index, comment in enumerate(comments, 1):
+        author = html.escape(str(comment.get("author") or "аноним"), quote=False)
+        text = " ".join(str(comment.get("text") or "").split())
+        if len(text) > 300:
+            text = text[:297].rstrip() + "…"
+        text = html.escape(text, quote=False)
+
+        block = f"{index}. <b>{author}</b>"
+        like_count = comment.get("like_count") or 0
+        if like_count:
+            block += f" · ❤️ {like_count}"
+        block += f"\n{text}"
+
+        if len(current) + len(block) + 2 > 4000:
+            chunks.append(current)
+            current = block
+        else:
+            current += "\n\n" + block
+
+    chunks.append(current)
+    return chunks
+
+
+def _drop_expired_media_state() -> None:
+    """Снимает состояние кнопок, чтобы словарь не рос бесконечно."""
+    now = time.time()
+    for key, state in list(MEDIA_STATE.items()):
+        if now - state.get("created_at", now) > MEDIA_STATE_TTL:
+            MEDIA_STATE.pop(key, None)
+
 
 def _drop_expired_uploads() -> None:
     """Удаляет файлы, по которым пользователь так и не нажал кнопку."""
@@ -46,6 +140,7 @@ def _drop_expired_uploads() -> None:
 def purge_downloads() -> None:
     """Полная очистка downloads/ при старте бота: подтверждать уже нечего."""
     PENDING_UPLOADS.clear()
+    MEDIA_STATE.clear()
     cleaner.sweep(force=True)
 
 
@@ -55,6 +150,7 @@ async def cleanup_downloads_loop(interval: int = config.CLEANUP_INTERVAL) -> Non
         await asyncio.sleep(interval)
         try:
             _drop_expired_uploads()
+            _drop_expired_media_state()
             cleaner.sweep(protected={p["path"] for p in PENDING_UPLOADS.values()})
         except Exception as e:
             print(f"⚠️ Уборка не удалась: {e}")
@@ -134,7 +230,7 @@ async def group_and_private_link_handler(message: Message, bot: Bot) -> None:
     filesize = meta.get('filesize')
     if filesize and filesize > CONFIRM_SIZE_BYTES:
         key = uuid.uuid4().hex
-        PENDING_DOWNLOADS[key] = {"url": text, "platform": platform}
+        PENDING_DOWNLOADS[key] = {"url": text, "platform": platform, "meta": meta}
 
         kb = InlineKeyboardMarkup(inline_keyboard=[[
             InlineKeyboardButton(text="✅ Да, скачать", callback_data=f"dl_yes:{key}"),
@@ -174,8 +270,6 @@ async def _run_download(
     photo_dir = None
     error_message = "Неизвестная ошибка"
 
-    caption_text = url[:45] + "..." if len(url) > 45 else url
-
     try:
         # 1. Скачиваем видеоролик
         try:
@@ -192,6 +286,7 @@ async def _run_download(
                 PENDING_UPLOADS[key] = {
                     "path": file_path,
                     "url": url,
+                    "platform": platform,
                     "meta": meta,
                     "chat_id": message.chat.id,
                     "message_id": message.message_id,
@@ -223,34 +318,43 @@ async def _run_download(
                 # Файл НЕ удаляем — он нужен для отправки после подтверждения.
                 return
 
+            media_key = _register_media_state(url, platform)
             await message.answer_video(
                 video=FSInputFile(file_path),
-                caption=caption_text,
                 width=meta.get('width'),
                 height=meta.get('height'),
-                duration=meta.get('duration')
+                duration=meta.get('duration'),
+                reply_markup=_media_kb(url, media_key, platform, meta.get('like_count')),
             )
             success = True
 
         # 2. ЕСЛИ НЕ ВИДЕО (например, картинка/карусель) и это Инстаграм — скачиваем фото
         elif platform == "instagram":
-            photos = await dn.download_instagram_photos(url)
+            photos, like_count = await dn.download_instagram_photos(url)
 
             if photos:
                 photo_dir = Path(photos[0]).parent
 
                 if len(photos) == 1:
+                    media_key = _register_media_state(url, platform)
                     await message.answer_photo(
                         photo=FSInputFile(photos[0]),
-                        caption=caption_text
+                        reply_markup=_media_kb(url, media_key, platform, like_count),
                     )
                 else:
                     # Если это карусель из нескольких фото
                     media_group = [
-                        InputMediaPhoto(media=FSInputFile(p), caption=caption_text if i == 0 else "")
-                        for i, p in enumerate(photos[:10])  # Ограничение Telegram — до 10 медиа
+                        InputMediaPhoto(media=FSInputFile(p))
+                        for p in photos[:10]  # Ограничение Telegram — до 10 медиа
                     ]
                     await message.answer_media_group(media=media_group)
+                    # У альбома не может быть inline-клавиатуры, поэтому кнопки
+                    # отправляем отдельным сообщением
+                    media_key = _register_media_state(url, platform)
+                    await message.answer(
+                        "🔗",
+                        reply_markup=_media_kb(url, media_key, platform, like_count),
+                    )
 
                 success = True
 
@@ -317,7 +421,7 @@ async def cb_download_confirm(callback: CallbackQuery, bot: Bot) -> None:
         bot,
         pending["url"],
         pending["platform"],
-        {},
+        pending.get("meta") or {},
         status_msg,
         size_confirmed=True,
     )
@@ -355,16 +459,17 @@ async def cb_upload_confirm(callback: CallbackQuery, bot: Bot) -> None:
     file_path = pending["path"]
     url = pending["url"]
     meta = pending["meta"]
-    caption_text = url[:45] + "..." if len(url) > 45 else url
+    platform = pending.get("platform") or dn._detect_platform(url)
 
     try:
+        media_key = _register_media_state(url, platform)
         await bot.send_video(
             chat_id=pending["chat_id"],
             video=FSInputFile(file_path),
-            caption=caption_text,
             width=meta.get('width'),
             height=meta.get('height'),
             duration=meta.get('duration'),
+            reply_markup=_media_kb(url, media_key, platform, meta.get('like_count')),
         )
         if pending["is_group"]:
             try:
@@ -400,3 +505,53 @@ async def cb_upload_decline(callback: CallbackQuery) -> None:
         await callback.message.edit_text("🚫 Файл удалён.", reply_markup=None)
     except TelegramBadRequest:
         pass
+
+
+@router.callback_query(F.data.startswith("likes:"))
+async def cb_likes(callback: CallbackQuery) -> None:
+    """Показывает точное количество лайков из источника (кнопка-счётчик)."""
+    _, platform, raw_count = callback.data.split(":", 2)
+
+    if not raw_count.isdigit():
+        await callback.answer("Источник не сообщил количество лайков.", show_alert=True)
+        return
+
+    count = int(raw_count)
+    name = PLATFORM_NAMES.get(platform, "источник")
+    text = f"❤️ {count:,} лайков · {name}".replace(",", " ")
+    await callback.answer(text, show_alert=True)
+
+
+@router.callback_query(F.data.startswith("cmt:"))
+async def cb_comments(callback: CallbackQuery) -> None:
+    """Показывает топ комментариев к оригинальному видео."""
+    key = callback.data.split(":", 1)[1]
+    state = MEDIA_STATE.get(key)
+
+    if not state:
+        await callback.answer("Кнопка устарела, отправьте ссылку заново.", show_alert=True)
+        return
+
+    cached = state.get("comments")
+    if cached is not None:
+        await callback.answer()
+        comments = cached
+    else:
+        await callback.answer("Загружаю комментарии...")
+        comments = await dn.get_top_comments(
+            state["url"],
+            state["platform"],
+            limit=COMMENTS_LIMIT,
+        )
+        # Пустой результат не кешируем: пользователь может попробовать ещё раз.
+        if comments:
+            state["comments"] = comments
+
+    if not comments:
+        await callback.message.answer(
+            "💬 Комментарии не найдены или недоступны для этой платформы."
+        )
+        return
+
+    for chunk in _format_comment_chunks(comments):
+        await callback.message.answer(chunk)
