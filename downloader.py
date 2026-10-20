@@ -309,10 +309,38 @@ class Downloader:
 
     async def get_top_comments(self, url: str, platform: str, limit: int = 15) -> list[dict]:
         """Возвращает топ комментариев по лайкам. Пустой список — комментарии недоступны."""
-        try:
-            if platform == "instagram":
+        if platform == "instagram":
+            # Основной путь — yt-dlp: он использует /app/cookies.txt и умеет
+            # тянуть комментарии Instagram от имени залогиненной сессии.
+            try:
+                comments = await asyncio.to_thread(
+                    self._sync_ydl_comments, url, platform, limit
+                )
+                if comments:
+                    logger.info(f"Instagram: получено {len(comments)} комментариев")
+                    return comments
+                logger.warning(f"Instagram: yt-dlp вернул 0 комментариев для {url}")
+            except Exception:
+                logger.warning(
+                    f"Instagram: yt-dlp не смог получить комментарии для {url}",
+                    exc_info=True,
+                )
+
+            # Фолбэк — instaloader (работает, только если у него есть сессия).
+            try:
                 return await asyncio.to_thread(self._sync_instagram_comments, url, limit)
+            except Exception:
+                logger.warning(
+                    f"Instagram: instaloader не смог получить комментарии для {url}",
+                    exc_info=True,
+                )
+                return []
+
+        try:
             return await asyncio.to_thread(self._sync_ydl_comments, url, platform, limit)
-        except Exception as e:
-            logger.warning(f"Не удалось получить комментарии для {url}: {e}")
+        except Exception:
+            logger.warning(
+                f"Не удалось получить комментарии для {url}",
+                exc_info=True,
+            )
             return []
