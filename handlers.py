@@ -68,15 +68,19 @@ def _media_kb(
     """
     platform_tag = platform or "unknown"
     likes_tag = str(like_count) if like_count is not None else "none"
+    likes_button = InlineKeyboardButton(
+        text=_format_likes(like_count),
+        callback_data=f"likes:{platform_tag}:{likes_tag}",
+    )
+    actions = [likes_button]
+    if dn.supports_comments(platform):
+        actions.append(
+            InlineKeyboardButton(text="💬 Комментарии", callback_data=f"cmt:{key}")
+        )
+
     return InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="🔗 Ссылка на оригинал", url=url)],
-        [
-            InlineKeyboardButton(
-                text=_format_likes(like_count),
-                callback_data=f"likes:{platform_tag}:{likes_tag}",
-            ),
-            InlineKeyboardButton(text="💬 Комментарии", callback_data=f"cmt:{key}"),
-        ],
+        actions,
     ])
 
 
@@ -530,6 +534,12 @@ async def cb_comments(callback: CallbackQuery) -> None:
 
     if not state:
         await callback.answer("Кнопка устарела, отправьте ссылку заново.", show_alert=True)
+        return
+
+    if not dn.supports_comments(state["platform"]):
+        await callback.answer(
+            "Комментарии для этой платформы недоступны.", show_alert=True
+        )
         return
 
     cached = state.get("comments")

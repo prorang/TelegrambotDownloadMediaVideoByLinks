@@ -13,7 +13,11 @@ from cleanup import DownloadsCleaner
 
 logger = logging.getLogger(__name__)
 
+
 class Downloader:
+    # Платформы, для которых комментарии реально достаются текущей реализацией.
+    COMMENT_PLATFORMS = frozenset({"youtube", "instagram"})
+
     def __init__(self, cleaner: DownloadsCleaner) -> None:
         self._cleaner = cleaner
         self._platforms_map = {
@@ -306,6 +310,10 @@ class Downloader:
 
         comments.sort(key=lambda c: c['like_count'], reverse=True)
         return comments[:limit]
+
+    def supports_comments(self, platform: str | None) -> bool:
+        """Можно ли показать кнопку комментариев для этой платформы."""
+        return platform in self.COMMENT_PLATFORMS
 
     async def get_top_comments(self, url: str, platform: str, limit: int = 15) -> list[dict]:
         """Возвращает топ комментариев по лайкам. Пустой список — комментарии недоступны."""
