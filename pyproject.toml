@@ -25,7 +25,16 @@ ignore = [
 ]
 
 [tool.ruff.lint.isort]
-known-first-party = ["config", "loader", "handlers", "ai_handlers", "downloader", "openai_service"]
+known-first-party = [
+    "config",
+    "loader",
+    "handlers",
+    "ai_handlers",
+    "presets",
+    "preset_handlers",
+    "downloader",
+    "openai_service",
+]
 
 [tool.ruff.format]
 quote-style = "double"

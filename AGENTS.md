@@ -23,6 +23,8 @@ main.py            → точка входа, подключает роутер�
 loader.py          → создаёт bot, dp, dn (Downloader), cleaner (DownloadsCleaner)
 handlers.py        → router загрузок: /start, /init_tg, ловля ссылок
 ai_handlers.py     → ai_router: /ai, история в памяти (TTL 1 час)
+presets.py         → встроенные ИИ-пресеты: Preset + PRESETS (system prompt)
+preset_handlers.py → preset_router: /idioma, ответ без истории
 downloader.py      → class Downloader: yt-dlp + instaloader
 cleanup.py         → class DownloadsCleaner: удаление временных файлов
 openai_service.py  → ask_openrouter() через OpenRouter
@@ -30,6 +32,14 @@ config.py          → чтение .env, константы
 ```
 
 Поток загрузки: ссылка → `_detect_platform()` → `get_video_meta()` (проверка длительности и размера) → при размере больше `CONFIRM_SIZE_MB` — кнопка подтверждения → `_run_download()` → страховочная проверка фактического размера файла (тоже с кнопкой, если больше лимита) → отправка → удаление временного файла через `cleaner`.
+
+## ИИ-пресеты
+
+`/ai` — свободный вопрос к модели с историей. `/idioma` — отдельная команда-пресет
+без истории: жёсткий system-prompt, каждый запрос независим. Пресеты описаны в
+`presets.py`, доставка — в `preset_handlers.py`, вызов модели — в `openai_service.py`.
+
+Подробнее: [docs/ai_presets.md](docs/ai_presets.md).
 
 ## Известные проблемы
 

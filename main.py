@@ -1,39 +1,45 @@
 import asyncio
 import logging
 
-import dns_config  # noqa: F401
-
 from aiogram import Bot
 from aiogram.types import BotCommand, BotCommandScopeAllPrivateChats
-from ai_handlers import ai_router
 
-from loader import bot, dp
+import dns_config  # noqa: F401
+from ai_handlers import ai_router
 from handlers import (
     cleanup_downloads_loop,
     purge_downloads,
+)
+from handlers import (
     router as download_router,
 )
+from loader import bot, dp
+from preset_handlers import preset_router
+
 
 async def set_bot_commands(bot_instance: Bot):
     """Регистрирует команды в меню Telegram."""
     commands = [
         BotCommand(command="start", description="Запустить бота 👋"),
-        BotCommand(command="init_tg", description="Обновить sessionid для Instagram 🔑")
+        BotCommand(command="ai", description="Свободный вопрос к ИИ 🤖"),
+        BotCommand(command="idioma", description="Перевод: испанский ↔ русский 🌐"),
+        BotCommand(command="init_tg", description="Обновить sessionid для Instagram 🔑"),
     ]
     await bot_instance.set_my_commands(commands=commands, scope=BotCommandScopeAllPrivateChats())
-    
+
+
 async def main() -> None:
     logging.basicConfig(
-        level=logging.INFO, 
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+        level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
     )
     logger = logging.getLogger(__name__)
     logger.info("Бот запускается...")
-    
+
     await set_bot_commands(bot)
 
     # Подключаем роутеры
     dp.include_router(ai_router)
+    dp.include_router(preset_router)
     dp.include_router(download_router)
 
     # Чистим временные файлы от прошлого запуска и запускаем фоновую уборку

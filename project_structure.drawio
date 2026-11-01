@@ -199,6 +199,26 @@
           </mxGeometry>
         </mxCell>
 
+        <mxCell id="preset_handlers" value="&lt;b&gt;preset_handlers.py&lt;/b&gt; — preset_router&lt;br&gt;• /idioma &amp;lt;текст&amp;gt;&#10;• без истории (независимый запрос)&#10;• ответ режется по 4000 символов" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;arcSize=8;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="860" y="610" width="280" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="presets" value="&lt;b&gt;presets.py&lt;/b&gt;&lt;br&gt;Preset(name, description, system_prompt)&lt;br&gt;PRESETS: idioma" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;arcSize=8;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="860" y="750" width="280" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="e27" value="include_router" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;fontColor=#333333;strokeColor=#666666;endArrow=block;endFill=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="main" target="preset_handlers">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="810" y="105" /><mxPoint x="810" y="665" /></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e28" value="PRESETS[name]" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;fontColor=#333333;strokeColor=#666666;endArrow=block;endFill=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="preset_handlers" target="presets">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e29" value="ask_openrouter(messages)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=11;fontColor=#333333;strokeColor=#666666;endArrow=block;endFill=1;exitX=1;exitY=0.36;exitDx=0;exitDy=0;entryX=0;entryY=0.75;entryDx=0;entryDy=0;" edge="1" parent="1" source="preset_handlers" target="openai">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="1190" y="650" /><mxPoint x="1190" y="570" /></Array>
+          </mxGeometry>
+        </mxCell>
+
       </root>
     </mxGraphModel>
   </diagram>

@@ -4,3 +4,4 @@ pydantic
 python-dotenv
 instaloader
 dnspython
+openai
